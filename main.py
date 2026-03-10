@@ -53,6 +53,7 @@ def main():
 
         # 5. Process tickers in batch if supported
         success_count = 0
+        failed_tickers = []
         data_dict = data_source.fetch_data_batch(download_tickers)
         
         for i, original_ticker in enumerate(tickers):
@@ -64,13 +65,18 @@ def main():
                 # Save data using the original ticker name
                 if storage.save_data(original_ticker, df):
                     success_count += 1
+                else:
+                    failed_tickers.append(original_ticker)
             else:
                 logger.warning(f"Skipping storage for {original_ticker} due to missing data.")
+                failed_tickers.append(original_ticker)
 
         # 6. Cleanup
         data_source.cleanup()
 
         logger.info(f"Pipeline finished. Successfully saved data for {success_count}/{len(tickers)} tickers.")
+        if failed_tickers:
+            logger.warning(f"Failed to download or save data for {len(failed_tickers)} tickers: {', '.join(failed_tickers)}")
         
     except Exception as e:
         logger = logging.getLogger("main")
