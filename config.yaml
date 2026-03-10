@@ -1,0 +1,44 @@
+# Financial Data Downloader Configuration
+
+# Configure logging
+logging:
+  level: "INFO" # DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+# Configure the data source
+data_source:
+  type: "yfinance" # Supported: 'yfinance', 'ibkr'
+  yfinance:
+    threads: true # If true, yf.download uses multi-threading. If false, it uses single-thread.
+    # Optional mapping to convert local symbols to data source tracking symbols
+    ticker_mapping:
+      "VIX": "^VIX"
+      "DJI": "^DJI"
+      "SPX": "^GSPC"
+      "RUT": "^RUT"
+  ibkr:
+    ticker_mapping:
+      "SPX": "SPX" # Placeholders for IBKR
+  #   host: "127.0.0.1"
+  #   port: 7497
+  #   client_id: 1
+
+# Configure where to get the tickers from
+ticker_source:
+  type: "wikipedia" # Supported: 'wikipedia', 'local', 'manual'
+  wikipedia:
+    url: "https://en.wikipedia.org/wiki/Nasdaq-100" # URL of the Wikipedia page containing the symbol table
+  local:
+     # file_path: "tickers.txt" # Parses symbols line by line or from CSV
+     dir_path: "/Users/tiancong/Desktop/watchlist" # Reads .txt files inside directory and merges symbols
+  manual:
+     symbols: ["AAPL", "MSFT", "GOOG"]
+
+# Configuration for downloading history
+download:
+  period: "1y" # Format: '1mo', '3mo', '6mo', '1y', '5y', 'max' (depends on data source)
+  interval: "1d" # Format: '1m', '5m', '15m', '1d', '1wk', '1mo'
+
+# Configure where and how to save the data
+storage:
+  type: "csv"
+  output_dir: "./data/futu" # Directory to save CSV files
