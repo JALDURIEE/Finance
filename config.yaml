@@ -17,7 +17,11 @@ data_source:
       "RUT": "^RUT"
   ibkr:
     ticker_mapping:
-      "SPX": "SPX" # Placeholders for IBKR
+      "DJI": "INDU"
+      "NDX": "NDX"
+      "RUT": "RUT"
+      "SPX": "SPX"
+      "VIX": "VIX"
     host: "127.0.0.1"
     port: 7496
     client_id: 1

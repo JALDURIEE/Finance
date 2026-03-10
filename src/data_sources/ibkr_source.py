@@ -60,11 +60,8 @@ class IBKRDataSource(BaseDataSource):
                 'VIX': 'CBOE'
             }
 
-            # Map the local ticker correctly, e.g. DJI -> INDU
-            if ticker == 'DJI':
-                ibkr_ticker = 'INDU'
-            else:
-                ibkr_ticker = ticker
+            # Map the local ticker using the config file if specified
+            ibkr_ticker = self.config.ticker_mapping.get(ticker, ticker)
 
             if ibkr_ticker in indices:
                 contract = Index(ibkr_ticker, indices[ibkr_ticker], 'USD')
