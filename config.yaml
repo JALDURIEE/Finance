@@ -18,6 +18,7 @@ data_source:
   ibkr:
     ticker_mapping:
       "DJI": "INDU"
+      "BRK-B": "BRK B"
     host: "127.0.0.1"
     port: 7496
     client_id: 1
