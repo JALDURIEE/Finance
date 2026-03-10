@@ -18,10 +18,6 @@ data_source:
   ibkr:
     ticker_mapping:
       "DJI": "INDU"
-      "NDX": "NDX"
-      "RUT": "RUT"
-      "SPX": "SPX"
-      "VIX": "VIX"
     host: "127.0.0.1"
     port: 7496
     client_id: 1
