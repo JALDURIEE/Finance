@@ -4,9 +4,9 @@ import asyncio
 from typing import Optional
 from .base import BaseDataSource
 try:
-    from ib_insync import IB, Stock, util
+    from ib_insync import IB, Stock, Index, util
 except ImportError:
-    IB = Stock = util = None
+    IB = Stock = Index = util = None
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,26 @@ class IBKRDataSource(BaseDataSource):
             duration_str = self._map_period_to_ibkr(self.download_config.period)
             bar_size_setting = self._map_interval_to_ibkr(self.download_config.interval)
 
-            contract = Stock(ticker, 'SMART', 'USD')
+            # Dictionary of known US indices and their primary exchanges on IBKR
+            indices = {
+                'SPX': 'CBOE',
+                'NDX': 'NASDAQ',
+                'INDU': 'CME', # Dow Jones
+                'RUT': 'RUSSELL',
+                'VIX': 'CBOE'
+            }
+
+            # Map the local ticker correctly, e.g. DJI -> INDU
+            if ticker == 'DJI':
+                ibkr_ticker = 'INDU'
+            else:
+                ibkr_ticker = ticker
+
+            if ibkr_ticker in indices:
+                contract = Index(ibkr_ticker, indices[ibkr_ticker], 'USD')
+            else:
+                contract = Stock(ibkr_ticker, 'SMART', 'USD')
+                
             self.ib.qualifyContracts(contract)
 
             bars = self.ib.reqHistoricalData(

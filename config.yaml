@@ -6,7 +6,7 @@ logging:
 
 # Configure the data source
 data_source:
-  type: "yfinance" # Supported: 'yfinance', 'ibkr'
+  type: "ibkr" # Supported: 'yfinance', 'ibkr'
   yfinance:
     threads: true # If true, yf.download uses multi-threading. If false, it uses single-thread.
     # Optional mapping to convert local symbols to data source tracking symbols
@@ -18,13 +18,13 @@ data_source:
   ibkr:
     ticker_mapping:
       "SPX": "SPX" # Placeholders for IBKR
-  #   host: "127.0.0.1"
-  #   port: 7497
-  #   client_id: 1
+    host: "127.0.0.1"
+    port: 7496
+    client_id: 1
 
 # Configure where to get the tickers from
 ticker_source:
-  type: "wikipedia" # Supported: 'wikipedia', 'local', 'manual'
+  type: "local" # Supported: 'wikipedia', 'local', 'manual'
   wikipedia:
     url: "https://en.wikipedia.org/wiki/Nasdaq-100" # URL of the Wikipedia page containing the symbol table
   local:
@@ -41,4 +41,4 @@ download:
 # Configure where and how to save the data
 storage:
   type: "csv"
-  output_dir: "./data/futu" # Directory to save CSV files
+  output_dir: "./data/csv" # Directory to save CSV files
