@@ -4,7 +4,8 @@ Version: 0.1.0
 Summary: A flexible financial data downloader supporting multiple sources like Yahoo Finance and IBKR.
 Author: JALDURIEE
 Requires-Python: >=3.8
-Requires-Dist: pandas>=2.0.0
+Requires-Dist: pandas<3.0.0,>=2.0.0
+Requires-Dist: numpy<2.0.0,>=1.26.0
 Requires-Dist: yfinance>=0.2.30
 Requires-Dist: ib-insync>=0.9.80
 Requires-Dist: PyYAML>=6.0

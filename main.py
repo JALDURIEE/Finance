@@ -1,5 +1,6 @@
 import logging
 import argparse
+from typing import Optional
 from src.config import AppConfig
 from src.ticker_sources import get_ticker_source
 from src.data_sources import get_data_source

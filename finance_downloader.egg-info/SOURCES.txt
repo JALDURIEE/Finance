@@ -1,4 +1,5 @@
 README.md
+main.py
 pyproject.toml
 finance_downloader.egg-info/PKG-INFO
 finance_downloader.egg-info/SOURCES.txt

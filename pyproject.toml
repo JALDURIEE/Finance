@@ -10,7 +10,8 @@ authors = [
     { name = "JALDURIEE" }
 ]
 dependencies = [
-    "pandas>=2.0.0",
+    "pandas>=2.0.0,<3.0.0",
+    "numpy>=1.26.0,<2.0.0",
     "yfinance>=0.2.30",
     "ib-insync>=0.9.80",
     "PyYAML>=6.0",
@@ -23,6 +24,9 @@ requires-python = ">=3.8"
 [project.scripts]
 finance-dl = "main:main"
 
+[tool.setuptools]
+py-modules = ["main"]
+
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["src*", "main"]
+include = ["src*"]
