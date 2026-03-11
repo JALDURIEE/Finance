@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: finance-downloader
+Version: 0.1.0
+Summary: A flexible financial data downloader supporting multiple sources like Yahoo Finance and IBKR.
+Author: JALDURIEE
+Requires-Python: >=3.8
+Requires-Dist: pandas>=2.0.0
+Requires-Dist: yfinance>=0.2.30
+Requires-Dist: ib-insync>=0.9.80
+Requires-Dist: PyYAML>=6.0
+Requires-Dist: requests>=2.30.0
+Requires-Dist: beautifulsoup4>=4.12.0
+Requires-Dist: lxml>=4.9.0
