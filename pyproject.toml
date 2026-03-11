@@ -30,3 +30,6 @@ py-modules = ["main"]
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["src*"]
+
+[tool.setuptools.package-data]
+src = ["*.yaml"]

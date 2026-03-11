@@ -17,11 +17,19 @@ rm -rf dist/
 rm -rf build/
 rm -rf *.egg-info/
 
-# 3. 执行构建
+# 3. 注入默认配置
+echo "⚙️ 将根目录下的 config.yaml 注入为默认配置..."
+cp config.yaml src/config.yaml
+
+# 4. 执行构建
 echo "🏗️ 正在构建项目..."
 python3 -m build
 
-# 4. 完成
+# 5. 清理注入的默认配置
+echo "🧹 清理打包临时文件..."
+rm src/config.yaml
+
+# 6. 完成
 echo "✅ 打包完成！"
 echo "--------------------------------------------------"
 echo "产物路径: $(pwd)/dist/"

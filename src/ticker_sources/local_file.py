@@ -11,6 +11,11 @@ class LocalFileTickerSource(BaseTickerSource):
         file_path = self.config.local_file_path
         dir_path = getattr(self.config, 'local_dir_path', None)
         
+        if file_path:
+            file_path = os.path.expanduser(file_path)
+        if dir_path:
+            dir_path = os.path.expanduser(dir_path)
+        
         if not file_path and not dir_path:
             raise ValueError("Either local_file_path or local_dir_path must be provided in config")
         

@@ -1,5 +1,6 @@
 import yaml
 import os
+import importlib.resources
 from dataclasses import dataclass
 from typing import Optional, List, Dict
 
@@ -42,11 +43,32 @@ class AppConfig:
         self._load_config()
 
     def _load_config(self):
-        if not os.path.exists(self.config_path):
-            raise FileNotFoundError(f"Configuration file not found at {self.config_path}")
-        
-        with open(self.config_path, "r", encoding="utf-8") as f:
-            raw_config = yaml.safe_load(f)
+        # 1. 尝试加载指定的路径（或默认的 config.yaml）
+        if os.path.exists(self.config_path):
+            with open(self.config_path, "r", encoding="utf-8") as f:
+                raw_config = yaml.safe_load(f)
+        else:
+            # 2. 如果文件不存在，且用户没有手动指定 config（即使用的是默认的 "config.yaml"）
+            # 或者用户指定了但文件确实没找到，我们尝试寻找内置的默认配置
+            try:
+                # 使用 importlib.resources 加载包内自带的默认配置
+                # 假设 config.yaml 放在 src 包下
+                with importlib.resources.open_text("src", "config.yaml") as f:
+                    raw_config = yaml.safe_load(f)
+                
+                # 如果是默认加载失败才走到这里，可以打印个友好的提示
+                # 注意：此时 self.config_path 如果是 "config.yaml"，说明用户没传参数
+                print(f"💡 Info: Local config '{self.config_path}' not found. Using internal default configuration.")
+            except (FileNotFoundError, ModuleNotFoundError, Exception):
+                # 如果内置的也找不到，或者加载出错，再抛出原本的错误
+                abs_path = os.path.abspath(self.config_path)
+                cwd = os.getcwd()
+                raise FileNotFoundError(
+                    f"\nConfiguration file NOT found at: {abs_path}\n"
+                    f"Current working directory: {cwd}\n"
+                    f"Internal default configuration was also not found.\n"
+                    f"Please ensure the file exists or specify a path using the --config flag."
+                )
 
         logging_raw = raw_config.get("logging", {})
         self.logging = LoggingConfig(
