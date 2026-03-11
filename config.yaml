@@ -6,7 +6,7 @@ logging:
 
 # Configure the data source
 data_source:
-  type: "ibkr" # Supported: 'yfinance', 'ibkr'
+  type: "yfinance" # Supported: 'yfinance', 'ibkr'
   yfinance:
     threads: true # If true, yf.download uses multi-threading. If false, it uses single-thread.
     # Optional mapping to convert local symbols to data source tracking symbols
