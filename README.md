@@ -26,6 +26,7 @@ pip install -r requirements.txt
 
 项目根目录的 `config.yaml` 是核心配置文件。你可以调整其中的：
 - `logging.level`: 日志级别 (`INFO`, `DEBUG` 等)。
+- `logging.file`: 日志保存路径 (例如 `app.log`)。若留空则不记录到文件。
 - `data_source`: 下载通道、源特定映射配置（如 `yfinance` 的多线程开关及代码映射）。
 - `ticker_source`: 选择 `wikipedia`, `local`, `manual` 中的一种，并分别配置其来源参数（URL、文件路径、目录路径或数组）。
 - `download`: 指定历史数据的 `period` (时长) 和 `interval` (K线粒度)。
@@ -50,6 +51,7 @@ python main.py [OPTIONS]
 | `--period` | 例如：`1mo`, `3mo`, `1y`, `max` | 覆盖要下载的历史时间跨度 |
 | `--interval` | 例如：`1d`, `1wk`, `1mo` | 覆盖 K 线数据的时间粒度 |
 | `--output-dir` | 目录路径，例如：`./data/export` | 覆盖 CSV 文件最终的保存目录 |
+| `--log-file` | 文件路径，例如：`./logs/app.log` | 覆盖日志保存文件的路径 |
 
 ### 运行示例
 
