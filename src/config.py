@@ -70,8 +70,8 @@ class AppConfig:
         self.ticker_source = TickerSourceConfig(
             type=ts_type,
             wikipedia_url=ticker_source_raw.get("wikipedia", {}).get("url"),
-            local_file_path=ticker_source_raw.get("local", {}).get("file_path"),
-            local_dir_path=ticker_source_raw.get("local", {}).get("dir_path"),
+            local_file_path=self.cli_args.get("local_file") or ticker_source_raw.get("local", {}).get("file_path"),
+            local_dir_path=self.cli_args.get("local_dir") or ticker_source_raw.get("local", {}).get("dir_path"),
             manual_symbols=ticker_source_raw.get("manual", {}).get("symbols"),
         )
 

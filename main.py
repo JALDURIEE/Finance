@@ -38,6 +38,8 @@ def main():
     parser.add_argument("--interval", type=str, help="Override download interval (e.g. 1d, 1wk)")
     parser.add_argument("--output-dir", type=str, help="Override storage output directory")
     parser.add_argument("--log-file", type=str, help="Override log file path")
+    parser.add_argument("--local-file", type=str, help="Override local ticker source file path (when --ticker-source local)")
+    parser.add_argument("--local-dir", type=str, help="Override local ticker source directory path (when --ticker-source local)")
     
     args = parser.parse_args()
 

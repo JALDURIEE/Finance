@@ -52,6 +52,8 @@ python main.py [OPTIONS]
 | `--interval` | 例如：`1d`, `1wk`, `1mo` | 覆盖 K 线数据的时间粒度 |
 | `--output-dir` | 目录路径，例如：`./data/export` | 覆盖 CSV 文件最终的保存目录 |
 | `--log-file` | 文件路径，例如：`./logs/app.log` | 覆盖日志保存文件的路径 |
+| `--local-file` | 文件路径，例如：`./tickers.txt` | 覆盖单个本地标的源文件路径（与 `--ticker-source local` 配合使用） |
+| `--local-dir` | 目录路径，例如：`/Users/you/watchlist` | 覆盖本地标的目录路径，会读取目录下所有 `.txt` 文件（与 `--ticker-source local` 配合使用） |
 
 ### 运行示例
 
@@ -73,4 +75,14 @@ python main.py --period 1mo --interval 1d --output-dir ./data/monthly_report
 **示例 4：临时切换为拉取 manual 设定的股票，使用 yfinance 数据源，抓取 1 天的 5 分钟线数据**
 ```bash
 python main.py --data-source yfinance --ticker-source manual --period 1d --interval 5m --output-dir ./data/intraday
+```
+
+**示例 5：直接在命令行指定本地标的文件**
+```bash
+python main.py --ticker-source local --local-file ./tickers.txt
+```
+
+**示例 6：直接在命令行指定本地标的目录**
+```bash
+python main.py --ticker-source local --local-dir /Users/you/watchlist
 ```
