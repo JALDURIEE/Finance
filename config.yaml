@@ -3,7 +3,7 @@
 # Configure logging
 logging:
   level: "INFO" # DEBUG, INFO, WARNING, ERROR, CRITICAL
-  file: "app.log" # Path to save logs, leave blank to disable file logging
+  file: "" # Path to save logs, leave blank to disable file logging
 
 # Configure the data source
 data_source:
