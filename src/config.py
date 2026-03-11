@@ -6,6 +6,7 @@ from typing import Optional, List, Dict
 @dataclass
 class LoggingConfig:
     level: str
+    file: Optional[str] = None
 
 @dataclass
 class DataSourceConfig:
@@ -47,7 +48,11 @@ class AppConfig:
         with open(self.config_path, "r", encoding="utf-8") as f:
             raw_config = yaml.safe_load(f)
 
-        self.logging = LoggingConfig(level=raw_config.get("logging", {}).get("level", "INFO"))
+        logging_raw = raw_config.get("logging", {})
+        self.logging = LoggingConfig(
+            level=logging_raw.get("level", "INFO"),
+            file=logging_raw.get("file")
+        )
         
         data_source_raw = raw_config.get("data_source", {})
         ds_type = self.cli_args.get("data_source") or data_source_raw.get("type", "yfinance")

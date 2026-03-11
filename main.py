@@ -5,7 +5,7 @@ from src.ticker_sources import get_ticker_source
 from src.data_sources import get_data_source
 from src.storage import get_storage
 
-def setup_logging(level_name: str):
+def setup_logging(level_name: str, log_file: Optional[str] = None):
     numeric_level = getattr(logging, level_name.upper(), logging.INFO)
     
     # Configure root logger
@@ -20,10 +20,11 @@ def setup_logging(level_name: str):
     console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
     
-    # File handler
-    file_handler = logging.FileHandler('app.log', encoding='utf-8')
-    file_handler.setFormatter(formatter)
-    root_logger.addHandler(file_handler)
+    # File handler (only if configured)
+    if log_file:
+        file_handler = logging.FileHandler(log_file, encoding='utf-8')
+        file_handler.setFormatter(formatter)
+        root_logger.addHandler(file_handler)
 
 def main():
     parser = argparse.ArgumentParser(description="Financial Data Downloader")
@@ -35,6 +36,7 @@ def main():
     parser.add_argument("--period", type=str, help="Override download period (e.g. 1y, 1mo)")
     parser.add_argument("--interval", type=str, help="Override download interval (e.g. 1d, 1wk)")
     parser.add_argument("--output-dir", type=str, help="Override storage output directory")
+    parser.add_argument("--log-file", type=str, help="Override log file path")
     
     args = parser.parse_args()
 
@@ -43,7 +45,7 @@ def main():
         app_config = AppConfig(args.config, cli_args=vars(args))
         
         # 2. Setup logging
-        setup_logging(app_config.logging.level)
+        setup_logging(app_config.logging.level, app_config.logging.file)
         logger = logging.getLogger("main")
         logger.info("Starting Financial Data Downloader pipeline")
         
