@@ -31,7 +31,7 @@ ticker_source:
     url: "https://en.wikipedia.org/wiki/Nasdaq-100" # URL of the Wikipedia page containing the symbol table
   local:
      # file_path: "tickers.txt" # Parses symbols line by line or from CSV
-     dir_path: "/Users/tiancong/Desktop/watchlist" # Reads .txt files inside directory and merges symbols
+     dir_path: "~/Desktop/watchlist" # Reads .txt files inside directory and merges symbols
   manual:
      symbols: ["AAPL", "MSFT", "GOOG"]
 
