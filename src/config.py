@@ -73,7 +73,7 @@ class AppConfig:
         logging_raw = raw_config.get("logging", {})
         self.logging = LoggingConfig(
             level=logging_raw.get("level", "INFO"),
-            file=logging_raw.get("file")
+            file=self.cli_args.get("log_file") or logging_raw.get("file")
         )
         
         data_source_raw = raw_config.get("data_source", {})
