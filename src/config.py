@@ -38,6 +38,7 @@ class DataSourceConfig:
     historical_timeout: float = 60
     contracts: Dict[str, IBKRContractConfig] = field(default_factory=dict)
     back_adjustment: bool = False
+    daily_date_mode: str = "bar_date"
 
 
 def parse_ibkr_contracts(raw_contracts: Dict) -> Dict[str, IBKRContractConfig]:
@@ -191,11 +192,19 @@ class AppConfig:
         if ds_type == "tradingview":
             if not isinstance(tradingview_raw, dict):
                 raise ValueError("data_source.tradingview must be a mapping")
-            unknown = set(tradingview_raw) - {"ticker_mapping", "back_adjustment"}
+            unknown = set(tradingview_raw) - {
+                "ticker_mapping", "back_adjustment", "daily_date_mode",
+            }
             if unknown:
                 raise ValueError(f"data_source.tradingview has unsupported fields: {', '.join(sorted(unknown))}")
             if not isinstance(tradingview_raw.get("back_adjustment", False), bool):
                 raise ValueError("data_source.tradingview.back_adjustment must be a boolean")
+            daily_date_mode = tradingview_raw.get("daily_date_mode", "bar_date")
+            if daily_date_mode not in {"bar_date", "next_session"}:
+                raise ValueError(
+                    "data_source.tradingview.daily_date_mode must be "
+                    "'bar_date' or 'next_session'"
+                )
             mapping = tradingview_raw.get("ticker_mapping", {})
             if not isinstance(mapping, dict) or any(
                 not isinstance(k, str) or not k.strip() or not isinstance(v, str) or ":" not in v
@@ -212,6 +221,7 @@ class AppConfig:
             historical_timeout=parse_historical_timeout(ibkr_raw.get("historical_timeout", 60)) if ds_type == "ibkr" else 60,
             contracts=parse_ibkr_contracts(ibkr_raw.get("contracts", {})) if ds_type == "ibkr" else {},
             back_adjustment=tradingview_raw.get("back_adjustment", False) if ds_type == "tradingview" else False,
+            daily_date_mode=daily_date_mode if ds_type == "tradingview" else "bar_date",
         )
         
         ticker_source_raw = raw_config.get("ticker_source", {})

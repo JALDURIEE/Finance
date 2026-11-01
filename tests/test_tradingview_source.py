@@ -52,6 +52,7 @@ class TradingViewTests(unittest.TestCase):
                 "data_source": {"type": "tradingview", "tradingview": {
                     "ticker_mapping": {"A50": "SGX:CN1!"},
                     "back_adjustment": True,
+                    "daily_date_mode": "next_session",
                 }},
                 "ticker_source": {"type": "manual", "manual": {"symbols": ["A50"]}},
                 "download": {"period": "3mo", "interval": "1d"},
@@ -61,6 +62,7 @@ class TradingViewTests(unittest.TestCase):
             }))
             config = AppConfig(str(config_path))
             self.assertTrue(config.data_source.back_adjustment)
+            self.assertEqual(config.data_source.daily_date_mode, "next_session")
             self.assertEqual(config.data_source.ticker_mapping["A50"], "SGX:CN1!")
             self.assertEqual(config.storage.datetime.timezone, "Asia/Shanghai")
             self.assertEqual(config.storage.datetime.format, "%Y/%m/%d %H:%M:%S")
@@ -77,6 +79,17 @@ class TradingViewTests(unittest.TestCase):
                 }}
             }))
             with self.assertRaisesRegex(ValueError, "back_adjustment"):
+                AppConfig(str(config_path))
+
+    def test_invalid_daily_date_mode_config(self):
+        with tempfile.TemporaryDirectory() as temp:
+            config_path = Path(temp) / "config.yaml"
+            config_path.write_text(yaml.safe_dump({
+                "data_source": {"type": "tradingview", "tradingview": {
+                    "daily_date_mode": "next_calendar_day"
+                }}
+            }))
+            with self.assertRaisesRegex(ValueError, "daily_date_mode"):
                 AppConfig(str(config_path))
 
     def test_back_adjustment_wire_field(self):
@@ -120,6 +133,57 @@ class TradingViewTests(unittest.TestCase):
             self.assertEqual(saved.columns.tolist(), [
                 "Ticker", "Date", "Open", "High", "Low", "Close", "Volume"
             ])
+
+    def test_daily_continuous_futures_use_next_session_date(self):
+        dates = pd.DatetimeIndex([
+            "2026-10-28 17:00",
+            "2026-10-29 17:00",
+            "2026-10-30 16:45",
+        ])
+        config = DataSourceConfig(
+            type="tradingview",
+            ticker_mapping={"A50": "SGX:CN1!"},
+            daily_date_mode="next_session",
+        )
+        source = module.TradingViewDataSource(config, DownloadConfig("1mo", "1d"))
+        with mock.patch.object(module, "TvDatafeed", FakeClient), mock.patch.object(
+            FakeClient, "get_hist", return_value=bars(dates)
+        ), mock.patch.object(source, "_older_page", return_value=None), mock.patch.object(
+            source, "_anchored_page", return_value=None
+        ):
+            result = source.fetch_data("A50")
+        self.assertEqual(result["Date"].dt.strftime("%Y-%m-%d").tolist(), [
+            "2026-10-29", "2026-10-30", "2026-11-02",
+        ])
+
+    def test_daily_continuous_futures_keep_bar_date_by_default(self):
+        dates = pd.DatetimeIndex(["2026-10-29 17:00", "2026-10-30 16:45"])
+        source = module.TradingViewDataSource(self.config, DownloadConfig("1mo", "1d"))
+        with mock.patch.object(module, "TvDatafeed", FakeClient), mock.patch.object(
+            FakeClient, "get_hist", return_value=bars(dates)
+        ), mock.patch.object(source, "_older_page", return_value=None), mock.patch.object(
+            source, "_anchored_page", return_value=None
+        ):
+            result = source.fetch_data("A50")
+        self.assertEqual(result["Date"].dt.strftime("%Y-%m-%d").tolist(), [
+            "2026-10-29", "2026-10-30",
+        ])
+
+    def test_daily_equity_keeps_exchange_date(self):
+        config = DataSourceConfig(
+            type="tradingview", ticker_mapping={"AAPL": "NASDAQ:AAPL"}
+        )
+        dates = pd.DatetimeIndex(["2026-10-29 09:30", "2026-10-30 09:30"])
+        source = module.TradingViewDataSource(config, DownloadConfig("1mo", "1d"))
+        with mock.patch.object(module, "TvDatafeed", FakeClient), mock.patch.object(
+            FakeClient, "get_hist", return_value=bars(dates)
+        ), mock.patch.object(source, "_older_page", return_value=None), mock.patch.object(
+            source, "_anchored_page", return_value=None
+        ):
+            result = source.fetch_data("AAPL")
+        self.assertEqual(result["Date"].dt.strftime("%Y-%m-%d").tolist(), [
+            "2026-10-29", "2026-10-30",
+        ])
 
     def test_no_progress_and_empty_result(self):
         source = module.TradingViewDataSource(self.config, DownloadConfig("3mo", "1d"))

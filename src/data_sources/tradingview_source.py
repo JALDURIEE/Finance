@@ -33,6 +33,13 @@ INTERVALS = {
 INTRADAY = {"1m", "5m", "15m", "30m", "60m"}
 
 
+def _next_session_dates(index: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Label overnight daily futures bars by their next trading session."""
+    dates = pd.DatetimeIndex(index).sort_values().normalize()
+    shifted = dates[1:].append(pd.DatetimeIndex([dates[-1] + pd.offsets.BDay(1)]))
+    return shifted.normalize()
+
+
 class _BackAdjustedTvDatafeed(TvDatafeed if TvDatafeed is not None else object):
     def _TvDatafeed__send_message(self, func, args):
         if func == "resolve_symbol":
@@ -157,6 +164,14 @@ class TradingViewDataSource(BaseDataSource):
                     [dt.datetime.timestamp(value.to_pydatetime()) for value in result.index],
                     unit="s", utc=True,
                 )
+            elif (
+                self.download_config.interval == "1d"
+                and symbol.endswith("!")
+                and self.config.daily_date_mode == "next_session"
+            ):
+                # TradingView labels an overnight continuous-futures daily bar
+                # with the next trading session, not the calendar day when it opens.
+                dates = _next_session_dates(result.index)
             else:
                 # Preserve the opening date, including overnight futures sessions.
                 dates = result.index
