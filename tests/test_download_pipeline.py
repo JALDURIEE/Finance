@@ -7,6 +7,7 @@ from unittest import mock
 
 import pandas as pd
 import main as app_main
+import yaml
 
 from src.config import (
     AppConfig, DataSourceConfig, DateTimeConfig, DownloadConfig, IBKRContractConfig,
@@ -143,14 +144,28 @@ class IBKRTests(unittest.TestCase):
 
 class ConfigTests(unittest.TestCase):
     def test_example_and_validation(self):
-        example = AppConfig("config_ibkr_a50.yaml")
-        spec = example.data_source.contracts["A50"]
-        self.assertEqual((spec.sec_type, spec.symbol, spec.exchange), ("CONTFUT", "XINA50", "SGX"))
-        self.assertIsNone(spec.historical.use_rth)
-        self.assertEqual(example.storage.datetime.timezone, "Asia/Shanghai")
-        self.assertEqual(example.storage.datetime.format, "%Y-%m-%d %H:%M:%S")
-        tv_example = AppConfig("config_tradingview_a50.yaml")
-        self.assertEqual(tv_example.storage.datetime.timezone, "Asia/Shanghai")
+        with tempfile.TemporaryDirectory() as temp:
+            config_path = Path(temp) / "config.yaml"
+            config_path.write_text(yaml.safe_dump({
+                "data_source": {"type": "ibkr", "ibkr": {
+                    "contracts": {"A50": {
+                        "sec_type": "CONTFUT", "symbol": "XINA50",
+                        "exchange": "SGX", "currency": "USD",
+                    }},
+                }},
+                "ticker_source": {"type": "manual", "manual": {"symbols": ["A50"]}},
+                "download": {"period": "1y", "interval": "15m"},
+                "storage": {"type": "csv", "output_dir": "./data/ibkr", "datetime": {
+                    "timezone": "Asia/Shanghai", "format": "%Y-%m-%d %H:%M:%S",
+                }},
+            }))
+            example = AppConfig(str(config_path))
+            spec = example.data_source.contracts["A50"]
+            self.assertEqual((spec.sec_type, spec.symbol, spec.exchange),
+                             ("CONTFUT", "XINA50", "SGX"))
+            self.assertIsNone(spec.historical.use_rth)
+            self.assertEqual(example.storage.datetime.timezone, "Asia/Shanghai")
+            self.assertEqual(example.storage.datetime.format, "%Y-%m-%d %H:%M:%S")
         override = parse_ibkr_contracts({"A50": {
             "sec_type": "CONTFUT", "symbol": "XINA50", "exchange": "SGX",
             "currency": "USD", "historical": {"use_rth": True},

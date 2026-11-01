@@ -47,13 +47,13 @@ storage:
 
 ### IBKR 连续期货示例
 
-启动 TWS 或 IB Gateway、开启 API，并确认账户具有对应市场的历史行情权限后运行：
+在 `config.yaml` 中把 `data_source.type` 设为 `ibkr`、配置 `data_source.ibkr.contracts`，并启动 TWS 或 IB Gateway、开启 API。确认账户具有对应市场的历史行情权限后运行：
 
 ```bash
-python main.py --config config_ibkr_a50.yaml
+python main.py --config config.yaml
 ```
 
-示例下载 A50 最近一个月的 30 分钟 K 线，保存为 `./data/ibkr/A50.csv`；对应 IBKR 的 `XINA50`、`SGX`、`USD`、`CONTFUT`。连续期货默认使用 `TRADES` 并设置 `use_rth: false`，包含夜盘；纳指等其他连续期货也使用同一默认值。模拟账户示例端口为 `7497`；真实账户通常使用 `7496`，请按 TWS 实际 API 设置修改。
+例如 A50 对应 IBKR 的 `XINA50`、`SGX`、`USD`、`CONTFUT`。连续期货默认使用 `TRADES` 并设置 `use_rth: false`，包含夜盘；纳指等其他连续期货也使用同一默认值。模拟账户示例端口为 `7497`；真实账户通常使用 `7496`，请按 TWS 实际 API 设置修改。
 
 在 `data_source.ibkr.contracts` 下可按本地代码添加其他 `STK`、`IND` 或 `CONTFUT` 合约。每个合约需填写 `sec_type`、`symbol`、`exchange`、`currency`，可选 `trading_class`。`historical` 段可省略；`what_to_show` 默认 `TRADES`，`use_rth` 对 `CONTFUT` 默认 `false`，对股票和指数默认 `true`。需要不同请求参数时才在对应合约的 `historical` 下覆盖。`what_to_show` 可选 `TRADES`、`MIDPOINT`、`BID`、`ASK`、`BID_ASK`；股票还可选 `ADJUSTED_LAST`。未显式配置的 IBKR 代码继续使用现有股票/已知指数规则，并应用 `ticker_mapping` 一次。显式合约匹配不到或匹配多个时，该标的失败，其他标的继续。
 
@@ -63,11 +63,13 @@ IBKR `CONTFUT` 只能请求历史 K 线，不能用于实时行情或交易，�
 
 ### TradingView 连续期货示例
 
+在 `config.yaml` 中把 `data_source.type` 设为 `tradingview`，然后运行：
+
 ```bash
-python main.py --config config_tradingview_a50.yaml
+python main.py --config config.yaml
 ```
 
-示例把本地 `A50` 映射到 `SGX:CN1!`，下载最近三个月日线到 `./data/tradingview/A50.csv`，并开启 B-ADJ。`data_source.tradingview.back_adjustment` 默认 `false`；设为 `true` 时，请求 TradingView 的回溯调整数据，不自行修改 OHLCV。其他标的可在 `ticker_mapping` 中填写完整的 `EXCHANGE:SYMBOL`。无需登录即可尝试，但匿名访问的历史深度或标的权限可能受限。
+例如把本地 `A50` 映射到 `SGX:CN1!`，开启 `back_adjustment` 后会请求 TradingView 的回溯调整数据，不自行修改 OHLCV。其他标的可在 `ticker_mapping` 中填写完整的 `EXCHANGE:SYMBOL`。无需登录即可尝试，但匿名访问的历史深度或标的权限可能受限。
 
 TradingView 数据下载不需要登录。项目始终使用匿名访问，不会读取用户名、密码、浏览器 Cookie 或认证令牌。账户登录和匿名访问可取得的 30m 历史范围相同；例如 2026-11-01 对 `SGX:CN1!` 实测两者都只能回溯到 2025-12-31。需要更长历史时应改用其他数据源，而不是配置 TradingView 登录。
 

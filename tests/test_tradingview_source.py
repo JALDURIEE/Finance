@@ -46,14 +46,27 @@ class TradingViewTests(unittest.TestCase):
         )
 
     def test_config_and_factory(self):
-        config = AppConfig("config_tradingview_a50.yaml")
-        self.assertTrue(config.data_source.back_adjustment)
-        self.assertEqual(config.data_source.ticker_mapping["A50"], "SGX:CN1!")
-        self.assertEqual(config.storage.datetime.timezone, "Asia/Shanghai")
-        self.assertEqual(config.storage.datetime.format, "%Y/%m/%d %H:%M:%S")
-        self.assertIsInstance(module.TradingViewDataSource(
-            self.config, DownloadConfig("3mo", "1d")
-        ), module.TradingViewDataSource)
+        with tempfile.TemporaryDirectory() as temp:
+            config_path = Path(temp) / "config.yaml"
+            config_path.write_text(yaml.safe_dump({
+                "data_source": {"type": "tradingview", "tradingview": {
+                    "ticker_mapping": {"A50": "SGX:CN1!"},
+                    "back_adjustment": True,
+                }},
+                "ticker_source": {"type": "manual", "manual": {"symbols": ["A50"]}},
+                "download": {"period": "3mo", "interval": "1d"},
+                "storage": {"type": "csv", "output_dir": "./data/tradingview", "datetime": {
+                    "timezone": "Asia/Shanghai", "format": "%Y/%m/%d %H:%M:%S",
+                }},
+            }))
+            config = AppConfig(str(config_path))
+            self.assertTrue(config.data_source.back_adjustment)
+            self.assertEqual(config.data_source.ticker_mapping["A50"], "SGX:CN1!")
+            self.assertEqual(config.storage.datetime.timezone, "Asia/Shanghai")
+            self.assertEqual(config.storage.datetime.format, "%Y/%m/%d %H:%M:%S")
+            self.assertIsInstance(module.TradingViewDataSource(
+                config.data_source, config.download
+            ), module.TradingViewDataSource)
 
     def test_invalid_back_adjustment_config(self):
         with tempfile.TemporaryDirectory() as temp:
