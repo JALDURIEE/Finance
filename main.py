@@ -12,6 +12,8 @@ def setup_logging(level_name: str, log_file: Optional[str] = None):
     # Configure root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(numeric_level)
+    # ib_async logs portfolio synchronization at INFO when connecting to TWS.
+    logging.getLogger("ib_async").setLevel(logging.WARNING)
     
     # Create formatter
     formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(name)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
@@ -32,7 +34,7 @@ def main():
     parser.add_argument("--config", default="config.yaml", help="Path to configuration file")
     
     # CLI Overrides
-    parser.add_argument("--data-source", type=str, choices=['yfinance', 'ibkr'], help="Override data source type")
+    parser.add_argument("--data-source", type=str, choices=['yfinance', 'ibkr', 'tradingview'], help="Override data source type")
     parser.add_argument("--ticker-source", type=str, choices=['wikipedia', 'local', 'manual'], help="Override ticker source type")
     parser.add_argument("--period", type=str, help="Override download period (e.g. 1y, 1mo)")
     parser.add_argument("--interval", type=str, help="Override download interval (e.g. 1d, 1wk)")
@@ -43,6 +45,7 @@ def main():
     
     args = parser.parse_args()
 
+    data_source = None
     try:
         # 1. Load configuration (and apply CLI overrides)
         app_config = AppConfig(args.config, cli_args=vars(args))
@@ -65,18 +68,14 @@ def main():
             logger.warning("No tickers found. Exiting.")
             return
 
-        # Apply mapping
-        download_tickers = [app_config.data_source.ticker_mapping.get(t, t) for t in tickers]
-
         # 5. Process tickers in batch if supported
         success_count = 0
         failed_tickers = []
-        data_dict = data_source.fetch_data_batch(download_tickers)
+        data_dict = data_source.fetch_data_batch(tickers)
         
         for i, original_ticker in enumerate(tickers):
-            download_ticker = app_config.data_source.ticker_mapping.get(original_ticker, original_ticker)
             logger.info(f"Processing {original_ticker} ({i+1}/{len(tickers)})")
-            df = data_dict.get(download_ticker)
+            df = data_dict.get(original_ticker)
             
             if df is not None and not df.empty:
                 # Save data using the original ticker name
@@ -88,9 +87,6 @@ def main():
                 logger.warning(f"Skipping storage for {original_ticker} due to missing data.")
                 failed_tickers.append(original_ticker)
 
-        # 6. Cleanup
-        data_source.cleanup()
-
         logger.info(f"Pipeline finished. Successfully saved data for {success_count}/{len(tickers)} tickers.")
         if failed_tickers:
             logger.warning(f"Failed to download or save data for {len(failed_tickers)} tickers: {', '.join(failed_tickers)}")
@@ -98,6 +94,12 @@ def main():
     except Exception as e:
         logger = logging.getLogger("main")
         logger.exception(f"An error occurred during execution: {e}")
+    finally:
+        if data_source is not None:
+            try:
+                data_source.cleanup()
+            except Exception:
+                logging.getLogger("main").exception("Failed to clean up data source")
 
 if __name__ == "__main__":
     main()

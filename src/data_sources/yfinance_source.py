@@ -8,11 +8,12 @@ logger = logging.getLogger(__name__)
 
 class YFinanceDataSource(BaseDataSource):
     def fetch_data(self, ticker: str) -> Optional[pd.DataFrame]:
+        source_ticker = self.config.ticker_mapping.get(ticker, ticker)
         logger.info(f"[{ticker}] Fetching data from Yahoo Finance "
                     f"(period={self.download_config.period}, interval={self.download_config.interval})")
         
         try:
-            stock = yf.Ticker(ticker)
+            stock = yf.Ticker(source_ticker)
             df = stock.history(
                 period=self.download_config.period,
                 interval=self.download_config.interval,
@@ -38,10 +39,13 @@ class YFinanceDataSource(BaseDataSource):
         result = {t: None for t in tickers}
         if not tickers:
             return result
+
+        source_by_local = {ticker: self.config.ticker_mapping.get(ticker, ticker) for ticker in tickers}
+        source_tickers = list(dict.fromkeys(source_by_local.values()))
             
         try:
             df = yf.download(
-                tickers,
+                source_tickers,
                 period=self.download_config.period,
                 interval=self.download_config.interval,
                 group_by="ticker",
@@ -57,22 +61,24 @@ class YFinanceDataSource(BaseDataSource):
             if isinstance(df.columns, pd.MultiIndex):
                 # Extract level 0 which contains the tickers
                 available_tickers = set(df.columns.get_level_values(0))
-                for t in tickers:
-                    if t in available_tickers:
-                        ticker_df = df[t].copy()
+                for local_ticker, source_ticker in source_by_local.items():
+                    if source_ticker in available_tickers:
+                        ticker_df = df[source_ticker].copy()
                         # Drop rows where all prices are NaN
                         ticker_df = ticker_df.dropna(how='all')
                         if not ticker_df.empty:
                             ticker_df = ticker_df.reset_index()
-                            result[t] = ticker_df
+                            result[local_ticker] = ticker_df
             else:
                 # Fallback for single ticker where yfinance might not return MultiIndex
-                t = tickers[0]
+                if len(source_tickers) != 1:
+                    raise ValueError("Yahoo returned single-level columns for multiple source tickers")
                 ticker_df = df.copy()
                 ticker_df = ticker_df.dropna(how='all')
                 if not ticker_df.empty:
                     ticker_df = ticker_df.reset_index()
-                    result[t] = ticker_df
+                    for local_ticker in tickers:
+                        result[local_ticker] = ticker_df.copy()
                         
             return result
         except Exception as e:

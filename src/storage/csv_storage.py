@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import logging
+from zoneinfo import ZoneInfo
 from src.config import AppConfig
 from .base import BaseStorage
 
@@ -10,6 +11,8 @@ class CSVStorage(BaseStorage):
     def __init__(self, app_config: AppConfig):
         super().__init__(app_config.storage)
         self.output_dir = app_config.get_output_dir()
+        self.interval = app_config.download.interval
+        self.datetime_config = app_config.storage.datetime
         
     def save_data(self, ticker: str, df: pd.DataFrame) -> bool:
         if df is None or df.empty:
@@ -25,10 +28,25 @@ class CSVStorage(BaseStorage):
                 'close': 'Close', 'volume': 'Volume', 'Datetime': 'Date'
             }, inplace=True, errors='ignore')
             
-            # Format Date column
+            # Preserve the exchange-provided date for daily/weekly/monthly bars.
+            # Intraday bars use timezone-aware values and are converted only for output.
             if 'Date' in df.columns:
-                df['Date'] = pd.to_datetime(df['Date'], utc=True).dt.tz_localize(None)
-                df['Date'] = df['Date'].dt.strftime('%Y/%m/%d')
+                if self.interval in {'1m', '2m', '5m', '15m', '30m', '60m'}:
+                    if any(pd.isna(value) or pd.Timestamp(value).tzinfo is None for value in df['Date']):
+                        raise ValueError('Intraday bars require timezone-aware Date values')
+                    dates = pd.to_datetime(df['Date'], utc=True).dt.tz_convert(
+                        ZoneInfo(self.datetime_config.timezone)
+                    )
+                    if self.datetime_config.format is None:
+                        df['Date'] = dates.map(
+                            lambda value: value.isoformat(timespec='seconds').replace('+00:00', 'Z')
+                        )
+                    else:
+                        df['Date'] = dates.dt.strftime(self.datetime_config.format)
+                else:
+                    if df['Date'].isna().any():
+                        raise ValueError('Date contains missing values')
+                    df['Date'] = df['Date'].map(lambda value: pd.Timestamp(value).strftime('%Y/%m/%d'))
             
             # Add Ticker column at the very beginning
             if 'Ticker' not in df.columns:
